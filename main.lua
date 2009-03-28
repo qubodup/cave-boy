@@ -110,6 +110,8 @@ function load()
 		step = 1, -- whick step of the intro is being played?
 	}
 
+	joystick_enabled = (love.joystick.getNumJoysticks() > 0)
+
 end
 
 function play_intro()
@@ -158,6 +160,7 @@ function update(dt)
 end
 
 function joystick_start()
+	if not joystick_enabled then return end
 	joy_down.up = (love.joystick.getAxis(0,7) == -1)
 	joy_down.right = (love.joystick.getAxis(0,6) ==  1)
 	joy_down.down = (love.joystick.getAxis(0,7) ==  1)
