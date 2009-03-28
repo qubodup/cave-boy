@@ -121,6 +121,9 @@ function play_intro()
 end
 
 function update(dt)
+
+	--joystick_start()
+
 	check_targets(boy) -- checks if boy is on secret or exit
 
 	if intro.step ~= 7 then play_intro() end -- play intro!
@@ -140,6 +143,33 @@ function update(dt)
 		key_down.step = key_down.step + 1
 		key_down.duration = 0
 	end
+
+	--joystick_end()
+	
+end
+
+function joystick_start()
+		if love.joystick.getAxis(0,7) == -1	then key_down.up = true
+	elseif love.joystick.getAxis(0,6) ==  1	then key_down.right = true
+	elseif love.joystick.getAxis(0,7) ==  1	then key_down.down = true
+	elseif love.joystick.getAxis(0,6) == -1	then key_down.left = true
+	end
+
+	if key == love.key_up or key == love.key_right or key == love.key_down or key == love.key_left then key_down.is_down = true end
+
+end
+
+function joystick_end()
+
+	if love.joystick.getAxis(0,7) == 0 then
+		key_down.up = false
+		key_down.down = false
+	end
+	if love.joystick.getAxis(0,6) == 0 then
+		key_down.right = false
+		key_down.left = false
+	end
+
 end
 
 function draw()
