@@ -20,14 +20,14 @@ function load()
 		color = color.blue,
 	}
 	secret = {
-		x = 30,
-		y = 40,
+		x = 39,
+		y = 45,
 		color = color.green,
 		collected = false,
 	}
 	exit = { -- 
-		x = 75,
-		y = 10,
+		x = 71,
+		y = 18,
 		color = color.orange,
 	}
 	wall = {
@@ -51,7 +51,7 @@ function load()
 	
 	init_map() -- fills map with zeroes and ones
 
-	love.audio.setMode(96000, 2, 1024)
+	love.audio.setMode(96000, 2, 1024) -- hopefully doesn't screw up the audio on your system
 
 	sfx = { -- sounds table
 		ouch = {
@@ -184,4 +184,24 @@ function check_targets(to)
 			love.system.exit()
 		end
 	end
+end
+
+
+
+function mousepressed() -- mouse map editor, because this should make it a little easier to make maps...
+	local mouse = { -- get mouse coordinates
+		x = love.mouse.getX(),
+		y = love.mouse.getY(),
+	}
+
+	-- convert them to tile coordinates
+	local tile = { 
+		math.floor(mouse.x/tilesize)+1, -- tile's x coordinate
+		math.floor(mouse.y/tilesize)+1 -- tile's y coordinate
+	}
+
+	map.walls[#map.walls+1] = tile -- add tile to map
+
+	io.write("{"..tile[1]..","..tile[2].."},")-- print results
+	
 end
