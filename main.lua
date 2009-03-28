@@ -67,6 +67,7 @@ function load()
 		left = false,
 		is_down = false, -- whether or not one of the directional keys is being pressed
 		step = 0, -- for how many steps has a key been pressed?
+		duration = 0, -- for joystick?
 	}
 
 	joy_down = {
