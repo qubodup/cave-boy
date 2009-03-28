@@ -35,7 +35,7 @@ function load()
 
 	boy = {
 		x = 10,
-		y = 20, 
+		y = 20,
 		color = color.blue,
 	}
 	secret = {
@@ -44,7 +44,7 @@ function load()
 		color = color.green,
 		collected = false,
 	}
-	exit = { -- 
+	exit = { --
 		x = 71,
 		y = 18,
 		color = color.orange,
@@ -68,7 +68,15 @@ function load()
 		is_down = false, -- whether or not one of the directional keys is being pressed
 		step = 0, -- for how many steps has a key been pressed?
 	}
-	
+
+	joy_down = {
+		up = false,
+		right = false,
+		down = false,
+		left = false,
+		is_down = false
+	}
+
 	init_map() -- fills map with zeroes and ones
 
 	love.audio.setMode(96000, 2, 1024) -- hopefully doesn't screw up the audio on your system
@@ -122,52 +130,52 @@ end
 
 function update(dt)
 
-	--joystick_start()
+	joystick_start()
 
 	check_targets(boy) -- checks if boy is on secret or exit
 
 	if intro.step ~= 7 then play_intro() end -- play intro!
 
-	if key_down.is_down then -- timer
+	if key_down.is_down or joy_down.is_down then -- timer
 		key_down.duration = key_down.duration + dt
 	else
 		key_down.duration = 0
 		key_down.step = 0
 	end
 	if key_down.step < 2 or (key_down.step > 1 and key_down.duration > .04) or key_down.duration > .2 then -- more than needed I think
-		if key_down.up then try_move_boy("up") -- movement
-		elseif key_down.right then try_move_boy("right")
-		elseif key_down.down then try_move_boy("down")
-		elseif key_down.left then try_move_boy("left")
+		if key_down.up or joy_down.up then try_move_boy("up") -- movement
+		elseif key_down.right or joy_down.right then try_move_boy("right")
+		elseif key_down.down or joy_down.down then try_move_boy("down")
+		elseif key_down.left or joy_down.left then try_move_boy("left")
 		end
 		key_down.step = key_down.step + 1
 		key_down.duration = 0
 	end
 
-	--joystick_end()
-	
+	joystick_end()
+
 end
 
 function joystick_start()
-		if love.joystick.getAxis(0,7) == -1	then key_down.up = true
-	elseif love.joystick.getAxis(0,6) ==  1	then key_down.right = true
-	elseif love.joystick.getAxis(0,7) ==  1	then key_down.down = true
-	elseif love.joystick.getAxis(0,6) == -1	then key_down.left = true
+	if love.joystick.getAxis(0,7) == -1	then joy_down.up = true
+	elseif love.joystick.getAxis(0,6) ==  1	then joy_down.right = true
+	elseif love.joystick.getAxis(0,7) ==  1	then joy_down.down = true
+	elseif love.joystick.getAxis(0,6) == -1	then joy_down.left = true
 	end
 
-	if key == love.key_up or key == love.key_right or key == love.key_down or key == love.key_left then key_down.is_down = true end
+	if joy == love.joy_up or joy == love.joy_right or joy == love.joy_down or joy == love.joy_left then joy_down.is_down = true end
 
 end
 
 function joystick_end()
 
 	if love.joystick.getAxis(0,7) == 0 then
-		key_down.up = false
-		key_down.down = false
+		joy_down.up = false
+		joy_down.down = false
 	end
 	if love.joystick.getAxis(0,6) == 0 then
-		key_down.right = false
-		key_down.left = false
+		joy_down.right = false
+		joy_down.left = false
 	end
 
 end
@@ -284,7 +292,7 @@ function mousepressed() -- mouse map editor, because this should make it a littl
 	}
 
 	-- convert them to tile coordinates
-	local tile = { 
+	local tile = {
 		math.floor(mouse.x/tilesize)+1, -- tile's x coordinate
 		math.floor(mouse.y/tilesize)+1, -- tile's y coordinate
 	}
