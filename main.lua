@@ -1,6 +1,6 @@
  --[[ Cave Boy http://github.com/qubodup/cave-boy/
 
-   Copyright (C) 2009 Iwan Gabovitch
+   Copyright (C) 2009 Iwan Gabovitch, bartbes
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,6 +19,15 @@
   3. This notice may not be removed or altered from any source distribution.
 
 ]]--
+
+--You can disable this if you like, but I thought it'd be nice to have a keymap
+keymap = {}
+if love.filesystem.exists("keymap.lua") then
+	love.filesystem.require("keymap.lua")
+end
+keymap.x = keymap.x or 6
+keymap.y = keymap.y or 7
+
 function load()
 
 	love.filesystem.require("map.lua")
@@ -110,7 +119,7 @@ function load()
 		step = 1, -- whick step of the intro is being played?
 	}
 
-	joystick_enabled = (love.joystick.getNumJoysticks() > 0)
+	joystick_enabled = (love.joystick.getNumJoysticks() > 0 and love.joystick.getNumAxes(0) > keymap.x and love.joystick.getNumAxes(0) > keymap.y)
 
 end
 
@@ -147,8 +156,9 @@ function update(dt)
 	end
 	if key_down.step < 2 or (key_down.step > 1 and key_down.duration > .04) or key_down.duration > .2 then -- more than needed I think
 		if key_down.up or joy_down.up then try_move_boy("up") -- movement
-		elseif key_down.right or joy_down.right then try_move_boy("right")
 		elseif key_down.down or joy_down.down then try_move_boy("down")
+		end
+		if key_down.right or joy_down.right then try_move_boy("right")
 		elseif key_down.left or joy_down.left then try_move_boy("left")
 		end
 		key_down.step = key_down.step + 1
@@ -161,10 +171,10 @@ end
 
 function joystick_start()
 	if not joystick_enabled then return end
-	joy_down.up = (love.joystick.getAxis(0,7) == -1)
-	joy_down.right = (love.joystick.getAxis(0,6) ==  1)
-	joy_down.down = (love.joystick.getAxis(0,7) ==  1)
-	joy_down.left = (love.joystick.getAxis(0,6) == -1)
+	joy_down.up = (love.joystick.getAxis(0,keymap.y) == -1)
+	joy_down.right = (love.joystick.getAxis(0,keymap.x) ==  1)
+	joy_down.down = (love.joystick.getAxis(0,keymap.y) ==  1)
+	joy_down.left = (love.joystick.getAxis(0,keymap.x) == -1)
 
 	joy_down.is_down = (joy_down.up or joy_down.right or joy_down.down or joy_down.left)
 end
