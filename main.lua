@@ -1,4 +1,23 @@
  --[[ Cave Boy http://github.com/qubodup/cave-boy/
+
+   Copyright (C) 2009 Iwan Gabovitch
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
 ]]--
 function load()
 
@@ -77,11 +96,31 @@ function load()
 		}
 	}
 
-	love.audio.play(sfx.voice.title)
+	intro = { -- the intro sequence as a table...
+		step = 1, -- whick step of the intro is being played?
+	}
 
 end
 
+function play_intro()
+	if not love.audio.isPlaying() then
+		if intro.step == 1 then -- Cave Boy!
+			love.audio.play(sfx.voice.title)
+		elseif intro.step == 2 then -- Press Arrow!
+			love.audio.play(sfx.voice.press)
+		elseif intro.step == 3 then -- Move Cave Boy!
+			love.audio.play(sfx.voice.move)
+		elseif intro.step == 4 then -- Find Secret!
+			love.audio.play(sfx.voice.find)
+		elseif intro.step == 5 then -- Go Exit!
+			love.audio.play(sfx.voice.exit)
+		end
+		intro.step = intro.step + 1 -- next step plz!
+	end
+end
+
 function update(dt)
+	if intro.step ~= 6 then play_intro() end -- play intro!
 	if key_down.up or key_down.right or key_down.down or key_down_left then
 	
 	else
@@ -197,7 +236,7 @@ function mousepressed() -- mouse map editor, because this should make it a littl
 	-- convert them to tile coordinates
 	local tile = { 
 		math.floor(mouse.x/tilesize)+1, -- tile's x coordinate
-		math.floor(mouse.y/tilesize)+1 -- tile's y coordinate
+		math.floor(mouse.y/tilesize)+1, -- tile's y coordinate
 	}
 
 	map.walls[#map.walls+1] = tile -- add tile to map
