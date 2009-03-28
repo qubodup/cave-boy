@@ -15,22 +15,23 @@ function load()
 	love.graphics.setBackgroundColor(color.light) -- set background color
 
 	boy = {
-		x = 2,
-		y = 2, 
-		color = color.blue
+		x = 10,
+		y = 20, 
+		color = color.blue,
 	}
 	secret = {
-		x = 10,
-		y = 30,
-		color = color.green
+		x = 30,
+		y = 40,
+		color = color.green,
+		collected = false,
 	}
 	exit = { -- 
-		x = 40,
-		y = 20,
-		color = color.orange
+		x = 75,
+		y = 10,
+		color = color.orange,
 	}
 	wall = {
-		color = color.dark
+		color = color.dark,
 	}
 
 	tilesize = 16 -- the pixel width and height of a tile
@@ -50,6 +51,30 @@ function load()
 	
 	init_map() -- fills map with zeroes and ones
 
+	sfx = { -- sounds table
+		ouch = {
+			love.audio.newSound("sfx/ouch-01.ogg"),
+			love.audio.newSound("sfx/ouch-02.ogg"),
+			love.audio.newSound("sfx/ouch-03.ogg"),
+			love.audio.newSound("sfx/ouch-04.ogg"),
+			love.audio.newSound("sfx/ouch-05.ogg"),
+			love.audio.newSound("sfx/ouch-06.ogg"),
+			love.audio.newSound("sfx/ouch-07.ogg"),
+			love.audio.newSound("sfx/ouch-08.ogg"),
+		},
+		secret = love.audio.newSound("sfx/coins.ogg"),
+		exit = love.audio.newSound("sfx/door.ogg"),
+		voice = {
+			 title = love.audio.newSound("sfx/voice-cave_boy.ogg"),
+			 press = love.audio.newSound("sfx/voice-press_arrow.ogg"),
+			 move = love.audio.newSound("sfx/voice-move_cave_boy.ogg"),
+			 find = love.audio.newSound("sfx/voice-find_secret.ogg"),
+			 exit = love.audio.newSound("sfx/voice-go_exit.ogg"),
+		}
+	}
+
+	love.audio.play(sfx.voice.title)
+
 end
 
 function update(dt)
@@ -68,10 +93,17 @@ end
 function draw()
 	love.graphics.setColor(boy.color) -- boy color
 	love.graphics.rectangle(0,(boy.x-1)*tilesize,(boy.y-1)*tilesize,tilesize,tilesize) -- boy draw
-	love.graphics.setColor(secret.color) -- boy color
-	love.graphics.rectangle(0,(secret.x-1)*tilesize,(secret.y-1)*tilesize,tilesize,tilesize) -- boy draw
-	love.graphics.setColor(exit.color) -- boy color
+	if not secret.collected then
+		love.graphics.setColor(secret.color) -- secret color
+		love.graphics.rectangle(0,(secret.x-1)*tilesize,(secret.y-1)*tilesize,tilesize,tilesize) -- boy draw
+	end
+	love.graphics.setColor(exit.color) -- exit color
 	love.graphics.rectangle(0,(exit.x-1)*tilesize,(exit.y-1)*tilesize,tilesize,tilesize) -- boy draw
+
+	love.graphics.setColor(wall.color)	-- wall color
+	for i=1, #map.walls do -- draw walls
+		love.graphics.rectangle(0,(map.walls[i][1]-1)*tilesize,(map.walls[i][2]-1)*tilesize,tilesize,tilesize)
+	end
 end
 
 function keypressed(key)
@@ -111,7 +143,7 @@ function try_move_boy(direction) -- checks if movement is possible, if yes, move
 		if boy.x == 1 then to.x = map.width
 		else to.x = to.x-1 end
 	end
-	if check_tile(to) == true then move_boy(to) else play_bump() end
+	if check_tile(to) == true then move_boy(to) else bump() end
 end
 
 function check_tile(to) -- checks if tile can be accessed
@@ -122,11 +154,30 @@ function check_tile(to) -- checks if tile can be accessed
 	end
 end
 
-function play_bump() -- plays a 'walk in the wall' sound
-	print("BUMP!")
+function bump(direction) -- plays a 'walk in the wall' sound and some particle effect
+	if not love.audio.isPlaying() then
+		love.audio.play(sfx.ouch[math.random(1,#sfx.ouch)])
+	end
 end
 
 function move_boy(to) -- moves boy to coordinates
 	boy.x = to.x
 	boy.y = to.y
+	check_targets(to) -- checks if secret or exit was hit!
+end
+
+function check_targets(to)
+	if to.x == secret.x and to.y == secret.y and not secret.collected then
+		love.audio.play(sfx.secret)
+		secret.collected = true
+	end
+	if to.x == exit.x and to.y == exit.y then
+		if not secret.collected and not love.audio.isPlaying() then
+			love.audio.play(sfx.voice.find)
+		elseif secret.collected then
+			love.audio.play(sfx.exit)
+			love.timer.sleep(500)
+			love.system.exit()
+		end
+	end
 end
