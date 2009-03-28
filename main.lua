@@ -152,32 +152,26 @@ function update(dt)
 		key_down.duration = 0
 	end
 
-	joystick_end()
+--	joystick_end()
 
 end
 
 function joystick_start()
-	if love.joystick.getAxis(0,7) == -1	then joy_down.up = true
-	elseif love.joystick.getAxis(0,6) ==  1	then joy_down.right = true
-	elseif love.joystick.getAxis(0,7) ==  1	then joy_down.down = true
-	elseif love.joystick.getAxis(0,6) == -1	then joy_down.left = true
-	end
+	joy_down.up = (love.joystick.getAxis(0,7) == -1)
+	joy_down.right = (love.joystick.getAxis(0,6) ==  1)
+	joy_down.down = (love.joystick.getAxis(0,7) ==  1)
+	joy_down.left = (love.joystick.getAxis(0,6) == -1)
 
-	if joy == love.joy_up or joy == love.joy_right or joy == love.joy_down or joy == love.joy_left then joy_down.is_down = true end
-
+	joy_down.is_down = (joy_down.up or joy_down.right or joy_down.down or joy_down.left)
 end
 
 function joystick_end()
+	joy_down.up = (love.joystick.getAxis(0,7) == -1)
+	joy_down.right = (love.joystick.getAxis(0,6) ==  1)
+	joy_down.down = (love.joystick.getAxis(0,7) ==  1)
+	joy_down.left = (love.joystick.getAxis(0,6) == -1)
 
-	if love.joystick.getAxis(0,7) == 0 then
-		joy_down.up = false
-		joy_down.down = false
-	end
-	if love.joystick.getAxis(0,6) == 0 then
-		joy_down.right = false
-		joy_down.left = false
-	end
-
+	joy_down.is_down = (joy_down.up or joy_down.right or joy_down.down or joy_down.left)
 end
 
 function draw()
