@@ -51,6 +51,8 @@ function load()
 	
 	init_map() -- fills map with zeroes and ones
 
+	love.audio.setMode(96000, 2, 1024)
+
 	sfx = { -- sounds table
 		ouch = {
 			love.audio.newSound("sfx/ouch-01.ogg"),
@@ -62,14 +64,16 @@ function load()
 			love.audio.newSound("sfx/ouch-07.ogg"),
 			love.audio.newSound("sfx/ouch-08.ogg"),
 		},
-		secret = love.audio.newSound("sfx/coins.ogg"),
-		exit = love.audio.newSound("sfx/door.ogg"),
+		--secret = love.audio.newSound("sfx/coins.ogg"),
+		--exit = love.audio.newSound("sfx/door.ogg"),
 		voice = {
 			 title = love.audio.newSound("sfx/voice-cave_boy.ogg"),
 			 press = love.audio.newSound("sfx/voice-press_arrow.ogg"),
 			 move = love.audio.newSound("sfx/voice-move_cave_boy.ogg"),
 			 find = love.audio.newSound("sfx/voice-find_secret.ogg"),
 			 exit = love.audio.newSound("sfx/voice-go_exit.ogg"),
+			 collect = love.audio.newSound("sfx/voice-secret_collect.ogg"),
+			 went = love.audio.newSound("sfx/voice-exit_went.ogg"),
 		}
 	}
 
@@ -168,15 +172,15 @@ end
 
 function check_targets(to)
 	if to.x == secret.x and to.y == secret.y and not secret.collected then
-		love.audio.play(sfx.secret)
+		love.audio.play(sfx.voice.collect)
 		secret.collected = true
 	end
 	if to.x == exit.x and to.y == exit.y then
 		if not secret.collected and not love.audio.isPlaying() then
 			love.audio.play(sfx.voice.find)
 		elseif secret.collected then
-			love.audio.play(sfx.exit)
-			love.timer.sleep(500)
+			love.audio.play(sfx.voice.went)
+			love.timer.sleep(1500)
 			love.system.exit()
 		end
 	end
