@@ -65,7 +65,8 @@ function load()
 		right = false,
 		down = false,
 		left = false,
-		duration = 0, -- for how long has a key been pressed?
+		is_down = false, -- whether or not one of the directional keys is being pressed
+		step = 0, -- for how many steps has a key been pressed?
 	}
 	
 	init_map() -- fills map with zeroes and ones
@@ -120,36 +121,57 @@ function play_intro()
 end
 
 function update(dt)
-	if intro.step ~= 6 then play_intro() end -- play intro!
-	if key_down.up or key_down.right or key_down.down or key_down_left then
-	
+	check_targets(boy) -- checks if boy is on secret or exit
+
+	if intro.step ~= 7 then play_intro() end -- play intro!
+
+	if key_down.is_down then -- timer
+		key_down.duration = key_down.duration + dt
 	else
 		key_down.duration = 0
+		key_down.step = 0
 	end
-	if key_down.up then try_move_boy("up")
-	elseif key_down.right then try_move_boy("right")
-	elseif key_down.down then try_move_boy("down")
-	elseif key_down.left then try_move_boy("left")
+	if key_down.step < 2 or (key_down.step > 1 and key_down.duration > .04) or key_down.duration > .2 then -- more than needed I think
+		if key_down.up then try_move_boy("up") -- movement
+		elseif key_down.right then try_move_boy("right")
+		elseif key_down.down then try_move_boy("down")
+		elseif key_down.left then try_move_boy("left")
+		end
+		key_down.step = key_down.step + 1
+		key_down.duration = 0
 	end
 end
 
 function draw()
-	love.graphics.setColor(boy.color) -- boy color
-	love.graphics.rectangle(0,(boy.x-1)*tilesize,(boy.y-1)*tilesize,tilesize,tilesize) -- boy draw
-	if not secret.collected then
-		love.graphics.setColor(secret.color) -- secret color
-		love.graphics.rectangle(0,(secret.x-1)*tilesize,(secret.y-1)*tilesize,tilesize,tilesize) -- boy draw
-	end
-	love.graphics.setColor(exit.color) -- exit color
-	love.graphics.rectangle(0,(exit.x-1)*tilesize,(exit.y-1)*tilesize,tilesize,tilesize) -- boy draw
-
 	love.graphics.setColor(wall.color)	-- wall color
 	for i=1, #map.walls do -- draw walls
 		love.graphics.rectangle(0,(map.walls[i][1]-1)*tilesize,(map.walls[i][2]-1)*tilesize,tilesize,tilesize)
 	end
+
+	if not secret.collected then
+		love.graphics.setColor(secret.color) -- secret color
+		love.graphics.rectangle(0,(secret.x-1)*tilesize,(secret.y-1)*tilesize,tilesize,tilesize) -- secret draw
+		if intro.step == 5 then draw_cross(secret.x,secret.y) end
+	end
+	love.graphics.setColor(exit.color) -- exit color
+	love.graphics.rectangle(0,(exit.x-1)*tilesize,(exit.y-1)*tilesize,tilesize,tilesize) -- exit draw
+	if intro.step == 6 then draw_cross(exit.x,exit.y) end
+
+	love.graphics.setColor(boy.color) -- boy color
+	love.graphics.rectangle(0,(boy.x-1)*tilesize,(boy.y-1)*tilesize,tilesize,tilesize) -- boy draw
+	if intro.step == 4 then draw_cross(boy.x,boy.y) end
+
+end
+
+function draw_cross(x, y) -- draws a cross around whatever coordinates it gets
+	love.graphics.rectangle(0,(x-1)*tilesize+2*tilesize,(y-1)*tilesize,tilesize*3,tilesize)
+	love.graphics.rectangle(0,(x-1)*tilesize-4*tilesize,(y-1)*tilesize,tilesize*3,tilesize)
+	love.graphics.rectangle(0,(x-1)*tilesize,(y-1)*tilesize+2*tilesize,tilesize,tilesize*3)
+	love.graphics.rectangle(0,(x-1)*tilesize,(y-1)*tilesize-4*tilesize,tilesize,tilesize*3)
 end
 
 function keypressed(key)
+	if key == love.key_up or key == love.key_right or key == love.key_down or key == love.key_left then key_down.is_down = true end
 		if key == love.key_up		then key_down.up = true
 	elseif key == love.key_right	then key_down.right = true
 	elseif key == love.key_down		then key_down.down = true
@@ -164,6 +186,7 @@ function keyreleased(key)
 	elseif key == love.key_down		then key_down.down = false
 	elseif key == love.key_left		then key_down.left = false
 	end
+	if not key_down.up and not key_down.right and not key_down.down and not key_down.left then key_down.is_down = false end
 end
 
 function try_move_boy(direction) -- checks if movement is possible, if yes, moves
@@ -197,7 +220,7 @@ function check_tile(to) -- checks if tile can be accessed
 	end
 end
 
-function bump(direction) -- plays a 'walk in the wall' sound and some particle effect
+function bump(direction) -- plays a 'walk in the wall' sound
 	if not love.audio.isPlaying() then
 		love.audio.play(sfx.ouch[math.random(1,#sfx.ouch)])
 	end
@@ -206,7 +229,6 @@ end
 function move_boy(to) -- moves boy to coordinates
 	boy.x = to.x
 	boy.y = to.y
-	check_targets(to) -- checks if secret or exit was hit!
 end
 
 function check_targets(to)
@@ -225,8 +247,6 @@ function check_targets(to)
 	end
 end
 
-
-
 function mousepressed() -- mouse map editor, because this should make it a little easier to make maps...
 	local mouse = { -- get mouse coordinates
 		x = love.mouse.getX(),
@@ -242,5 +262,4 @@ function mousepressed() -- mouse map editor, because this should make it a littl
 	map.walls[#map.walls+1] = tile -- add tile to map
 
 	io.write("{"..tile[1]..","..tile[2].."},")-- print results
-	
 end
