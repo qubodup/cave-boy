@@ -89,7 +89,7 @@ function load()
 
 	init_map() -- fills map with zeroes and ones
 
-	love.audio.setMode(96000, 2, 1024) -- hopefully doesn't screw up the audio on your system
+	love.audio.setMode(44100, 2, 1024) -- hopefully doesn't screw up the audio on your system
 
 	sfx = { -- sounds table
 		ouch = {
