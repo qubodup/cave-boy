@@ -1,3 +1,3 @@
-Iwan Gabovitch aka qubodup <iwan.tumblr.com> started the project
+Iwan Gabovitch aka qubodup <http://iwan.tumblr.com> started the project
 
-bartbes <github.com/bartbes> added joystick and diagonal movement support
+bartbes <http://github.com/bartbes> added joystick and diagonal movement support
