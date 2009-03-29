@@ -4,7 +4,7 @@ Cave Boy is free software.
 
 All text and code is licensed under the zlib license:
 
-  Copyright (C) 2009 Iwan Gabovitch <qubodup@gmail.com>
+  Copyright (C) 2009 Iwan Gabovitch <qubodup@gmail.com> and bartbes
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
