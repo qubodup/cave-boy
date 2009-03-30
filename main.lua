@@ -109,6 +109,7 @@ function load()
 			 press = love.audio.newSound("sfx/voice-press_arrow.ogg"),
 			 move = love.audio.newSound("sfx/voice-move_cave_boy.ogg"),
 			 find = love.audio.newSound("sfx/voice-find_secret.ogg"),
+			 comeon = love.audio.newSound("sfx/voice-come_on.ogg"),
 			 exit = love.audio.newSound("sfx/voice-go_exit.ogg"),
 			 collect = love.audio.newSound("sfx/voice-secret_collect.ogg"),
 			 went = love.audio.newSound("sfx/voice-exit_went.ogg"),
@@ -118,6 +119,8 @@ function load()
 	intro = { -- the intro sequence as a table...
 		step = 1, -- whick step of the intro is being played?
 	}
+
+	exit_tries = 0 -- how often did the player to exit without having the secret?
 
 	joystick_enabled = (love.joystick.getNumJoysticks() > 0 and love.joystick.getNumAxes(0) > keymap.x and love.joystick.getNumAxes(0) > keymap.y)
 
@@ -283,8 +286,12 @@ function check_targets(to)
 		secret.collected = true
 	end
 	if to.x == exit.x and to.y == exit.y then
-		if not secret.collected and not love.audio.isPlaying() then
+		if not secret.collected and not love.audio.isPlaying() and intro.step > 6 and exit_tries < 10 then
 			love.audio.play(sfx.voice.find)
+			exit_tries = exit_tries + 1 -- increase wrong exit tries count
+		elseif not secret.collected and not love.audio.isPlaying() and exit_tries == 10 then -- come on!
+			love.audio.play(sfx.voice.comeon)
+			exit_tries = exit_tries + 1
 		elseif secret.collected then
 			love.audio.play(sfx.voice.went)
 			love.timer.sleep(1500)
