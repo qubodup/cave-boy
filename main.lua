@@ -294,7 +294,7 @@ function check_targets(to)
 			exit_tries = exit_tries + 1
 		elseif secret.collected then
 			love.audio.play(sfx.voice.went)
-			love.timer.sleep(1500)
+			love.timer.sleep(2000)
 			love.system.exit()
 		end
 	end
