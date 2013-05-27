@@ -20,24 +20,29 @@
 
 ]]--
 
---You can disable this if you like, but I thought it'd be nice to have a keymap
-keymap = {}
-if love.filesystem.exists("keymap.lua") then
-	love.filesystem.require("keymap.lua")
-end
-keymap.x = keymap.x or 6
-keymap.y = keymap.y or 7
+function love.load()
 
-function load()
+  success = love.graphics.setMode(1280,768)
 
-	love.filesystem.require("map.lua")
+  global_time = 0 -- timer for intro
+  sfx_time = 0 -- sfx timer
+
+  --You can disable this if you like, but I thought it'd be nice to have a keymap
+  keymap = {}
+  if love.filesystem.exists("keymap.lua") then
+    require("keymap.lua")
+  end
+  keymap.x = keymap.x or 6
+  keymap.y = keymap.y or 7
+
+	require("map")
 
 	color = { -- color table
-		light =		love.graphics.newColor(044,044,044), -- background
-		dark =		love.graphics.newColor(011,011,011), -- walls
-		blue =		love.graphics.newColor(015,072,255), -- cave boy!
-		green =		love.graphics.newColor(016,167,042), -- secret!
-		orange =	love.graphics.newColor(243,065,015), -- exit!
+		light =		{044,044,044}, -- background
+		dark =		{011,011,011}, -- walls
+		blue =		{015,072,255}, -- cave boy!
+		green =		{016,167,042}, -- secret!
+		orange =	{243,065,015}, -- exit!
 	}
 
 	love.graphics.setBackgroundColor(color.light) -- set background color
@@ -89,30 +94,30 @@ function load()
 
 	init_map() -- fills map with zeroes and ones
 
-	love.audio.setMode(44100, 2, 1024) -- hopefully doesn't screw up the audio on your system
+	--love.audio.setMode(44100, 2, 1024) -- hopefully doesn't screw up the audio on your system
 
 	sfx = { -- sounds table
 		ouch = {
-			love.audio.newSound("sfx/ouch-01.ogg"),
-			love.audio.newSound("sfx/ouch-02.ogg"),
-			love.audio.newSound("sfx/ouch-03.ogg"),
-			love.audio.newSound("sfx/ouch-04.ogg"),
-			love.audio.newSound("sfx/ouch-05.ogg"),
-			love.audio.newSound("sfx/ouch-06.ogg"),
-			love.audio.newSound("sfx/ouch-07.ogg"),
-			love.audio.newSound("sfx/ouch-08.ogg"),
+			love.audio.newSource("sfx/ouch-01.ogg"),
+			love.audio.newSource("sfx/ouch-02.ogg"),
+			love.audio.newSource("sfx/ouch-03.ogg"),
+			love.audio.newSource("sfx/ouch-04.ogg"),
+			love.audio.newSource("sfx/ouch-05.ogg"),
+			love.audio.newSource("sfx/ouch-06.ogg"),
+			love.audio.newSource("sfx/ouch-07.ogg"),
+			love.audio.newSource("sfx/ouch-08.ogg"),
 		},
-		--secret = love.audio.newSound("sfx/coins.ogg"),
-		--exit = love.audio.newSound("sfx/door.ogg"),
+		--secret = love.audio.newSource("sfx/coins.ogg"),
+		--exit = love.audio.newSource("sfx/door.ogg"),
 		voice = {
-			 title = love.audio.newSound("sfx/voice-cave_boy.ogg"),
-			 press = love.audio.newSound("sfx/voice-press_arrow.ogg"),
-			 move = love.audio.newSound("sfx/voice-move_cave_boy.ogg"),
-			 find = love.audio.newSound("sfx/voice-find_secret.ogg"),
-			 comeon = love.audio.newSound("sfx/voice-come_on.ogg"),
-			 exit = love.audio.newSound("sfx/voice-go_exit.ogg"),
-			 collect = love.audio.newSound("sfx/voice-secret_collect.ogg"),
-			 went = love.audio.newSound("sfx/voice-exit_went.ogg"),
+			 title = love.audio.newSource("sfx/voice-cave_boy.ogg"),
+			 press = love.audio.newSource("sfx/voice-press_arrow.ogg"),
+			 move = love.audio.newSource("sfx/voice-move_cave_boy.ogg"),
+			 find = love.audio.newSource("sfx/voice-find_secret.ogg"),
+			 comeon = love.audio.newSource("sfx/voice-come_on.ogg"),
+			 exit = love.audio.newSource("sfx/voice-go_exit.ogg"),
+			 collect = love.audio.newSource("sfx/voice-secret_collect.ogg"),
+			 went = love.audio.newSource("sfx/voice-exit_went.ogg"),
 		}
 	}
 
@@ -126,8 +131,8 @@ function load()
 
 end
 
-function play_intro()
-	if not love.audio.isPlaying() then
+function play_intro(time)
+	if time >= intro.step * 1.5 then
 		if intro.step == 1 then -- Cave Boy!
 			love.audio.play(sfx.voice.title)
 		elseif intro.step == 2 then -- Press Arrow!
@@ -143,13 +148,16 @@ function play_intro()
 	end
 end
 
-function update(dt)
+function love.update(dt)
+  print(global_time)
+
+  global_time = global_time + dt
 
 	joystick_start()
 
 	check_targets(boy) -- checks if boy is on secret or exit
 
-	if intro.step ~= 7 then play_intro() end -- play intro!
+	if intro.step ~= 7 then play_intro(global_time) end -- play intro!
 
 	if key_down.is_down or joy_down.is_down then -- timer
 		key_down.duration = key_down.duration + dt
@@ -169,6 +177,11 @@ function update(dt)
 	end
 
 --	joystick_end()
+
+  -- sound timer, to work without Source:isPlaying()
+  if sfx_time > 0 then
+    sfx_time = sfx_time - dt
+  end
 
 end
 
@@ -191,49 +204,50 @@ function joystick_end()
 	joy_down.is_down = (joy_down.up or joy_down.right or joy_down.down or joy_down.left)
 end
 
-function draw()
+function love.draw()
 	love.graphics.setColor(wall.color)	-- wall color
 	for i=1, #map.walls do -- draw walls
-		love.graphics.rectangle(0,(map.walls[i][1]-1)*tilesize,(map.walls[i][2]-1)*tilesize,tilesize,tilesize)
+		love.graphics.rectangle("fill",(map.walls[i][1]-1)*tilesize,(map.walls[i][2]-1)*tilesize,tilesize,tilesize)
 	end
 
 	if not secret.collected then
 		love.graphics.setColor(secret.color) -- secret color
-		love.graphics.rectangle(0,(secret.x-1)*tilesize,(secret.y-1)*tilesize,tilesize,tilesize) -- secret draw
+		love.graphics.rectangle("fill",(secret.x-1)*tilesize,(secret.y-1)*tilesize,tilesize,tilesize) -- secret draw
 		if intro.step == 5 then draw_cross(secret.x,secret.y) end
 	end
 	love.graphics.setColor(exit.color) -- exit color
-	love.graphics.rectangle(0,(exit.x-1)*tilesize,(exit.y-1)*tilesize,tilesize,tilesize) -- exit draw
+	love.graphics.rectangle("fill",(exit.x-1)*tilesize,(exit.y-1)*tilesize,tilesize,tilesize) -- exit draw
 	if intro.step == 6 then draw_cross(exit.x,exit.y) end
 
 	love.graphics.setColor(boy.color) -- boy color
-	love.graphics.rectangle(0,(boy.x-1)*tilesize,(boy.y-1)*tilesize,tilesize,tilesize) -- boy draw
+	love.graphics.rectangle("fill",(boy.x-1)*tilesize,(boy.y-1)*tilesize,tilesize,tilesize) -- boy draw
 	if intro.step == 4 then draw_cross(boy.x,boy.y) end
 
 end
 
 function draw_cross(x, y) -- draws a cross around whatever coordinates it gets
-	love.graphics.rectangle(0,(x-1)*tilesize+2*tilesize,(y-1)*tilesize,tilesize*3,tilesize)
-	love.graphics.rectangle(0,(x-1)*tilesize-4*tilesize,(y-1)*tilesize,tilesize*3,tilesize)
-	love.graphics.rectangle(0,(x-1)*tilesize,(y-1)*tilesize+2*tilesize,tilesize,tilesize*3)
-	love.graphics.rectangle(0,(x-1)*tilesize,(y-1)*tilesize-4*tilesize,tilesize,tilesize*3)
+	love.graphics.rectangle("fill",(x-1)*tilesize+2*tilesize,(y-1)*tilesize,tilesize*3,tilesize)
+	love.graphics.rectangle("fill",(x-1)*tilesize-4*tilesize,(y-1)*tilesize,tilesize*3,tilesize)
+	love.graphics.rectangle("fill",(x-1)*tilesize,(y-1)*tilesize+2*tilesize,tilesize,tilesize*3)
+	love.graphics.rectangle("fill",(x-1)*tilesize,(y-1)*tilesize-4*tilesize,tilesize,tilesize*3)
 end
 
-function keypressed(key)
-	if key == love.key_up or key == love.key_right or key == love.key_down or key == love.key_left then key_down.is_down = true end
-		if key == love.key_up		then key_down.up = true
-	elseif key == love.key_right	then key_down.right = true
-	elseif key == love.key_down		then key_down.down = true
-	elseif key == love.key_left		then key_down.left = true
-	elseif key == love.key_escape	then love.system.exit() -- shutting down
+function love.keypressed(key)
+	if key == "up" or key == "right" or key == "down" or key == "left" then key_down.is_down = true end
+		if key == "up"		  then key_down.up = true
+	elseif key == "right"	then key_down.right = true
+	elseif key == "down"	then key_down.down = true
+	elseif key == "left"	then key_down.left = true
+  elseif key == "escape" or key == "q" then
+     love.event.push("quit")
 	end
 end
 
-function keyreleased(key)
-	if key == love.key_up			then key_down.up = false
-	elseif key == love.key_right	then key_down.right = false
-	elseif key == love.key_down		then key_down.down = false
-	elseif key == love.key_left		then key_down.left = false
+function love.keyreleased(key)
+	if key == "up"			then key_down.up = false
+	elseif key == "right"	then key_down.right = false
+	elseif key == "down"		then key_down.down = false
+	elseif key == "left"		then key_down.left = false
 	end
 	if not key_down.up and not key_down.right and not key_down.down and not key_down.left then key_down.is_down = false end
 end
@@ -270,8 +284,9 @@ function check_tile(to) -- checks if tile can be accessed
 end
 
 function bump(direction) -- plays a 'walk in the wall' sound
-	if not love.audio.isPlaying() then
+	if sfx_time <= 0 then
 		love.audio.play(sfx.ouch[math.random(1,#sfx.ouch)])
+    sfx_time = .5
 	end
 end
 
@@ -286,21 +301,24 @@ function check_targets(to)
 		secret.collected = true
 	end
 	if to.x == exit.x and to.y == exit.y then
-		if not secret.collected and not love.audio.isPlaying() and intro.step > 6 and exit_tries < 10 then
+		if not secret.collected and sfx_time <= 0 and intro.step > 6 and exit_tries < 10 then
 			love.audio.play(sfx.voice.find)
+      sfx_time = 1.5
 			exit_tries = exit_tries + 1 -- increase wrong exit tries count
-		elseif not secret.collected and not love.audio.isPlaying() and exit_tries == 10 then -- come on!
+		elseif not secret.collected and sfx_time <= 0 and exit_tries == 10 then -- come on!
 			love.audio.play(sfx.voice.comeon)
+      sfx_time = 1.5
 			exit_tries = exit_tries + 1
 		elseif secret.collected then
 			love.audio.play(sfx.voice.went)
-			love.timer.sleep(2000)
-			love.system.exit()
+      sfx_time = 1.5
+			love.timer.sleep(2)
+      love.event.push("quit")
 		end
 	end
 end
 
-function mousepressed() -- mouse map editor, because this should make it a little easier to make maps...
+function love.mousepressed() -- mouse map editor, because this should make it a little easier to make maps...
 	local mouse = { -- get mouse coordinates
 		x = love.mouse.getX(),
 		y = love.mouse.getY(),
